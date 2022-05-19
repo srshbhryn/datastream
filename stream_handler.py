@@ -21,15 +21,6 @@ class StreamManager:
         for wsh in self.websocket_handlers:
             tornado.ioloop.IOLoop.current().add_callback(wsh.write_message, message)
 
-    # @tornado.gen.coroutine
-    async def watch(self):
-        print('aaa', self.stream_key)
-        response = yield redis_client.brpop(self.stream_key)
-        print('bbb', self.stream_key)
-        self.message_handler(response[1])
-        tornado.ioloop.IOLoop.current().add_callback(self.watch)
-
-
 stream_managers = {
     stream_key: StreamManager(stream_key)
     for stream_key in STREAM_KEYS

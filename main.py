@@ -2,7 +2,7 @@ import tornado.ioloop
 import tornado.web
 import tornado.websocket
 
-from stream_handler import stream_managers, redis_client
+from stream_handler import stream_managers
 
 
 def get_stream_manager(subscription_message):
@@ -44,7 +44,4 @@ if __name__ == "__main__":
         (r"/stream", StreamHandler),
     ])
     application.listen(8888)
-    for stream_manager in stream_managers.values():
-        tornado.ioloop.IOLoop.instance().add_callback(stream_manager.watch)
     tornado.ioloop.IOLoop.instance().start()
-

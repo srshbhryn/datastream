@@ -1,15 +1,9 @@
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
-import redis
 import tornado.gen
 
-# classtornado.tcpclient.TCPClient
-
-
-
-redis_client = redis.Redis(host='localhost', port=6379, db=0)
-
+from config import REDIS_HOST, REDIS_PORT, STREAM_KEYS
 
 
 class StreamManager:
@@ -36,12 +30,7 @@ class StreamManager:
         tornado.ioloop.IOLoop.current().add_callback(self.watch)
 
 
-stream_keys = [
-    'test1',
-    'test2',
-]
-
 stream_managers = {
     stream_key: StreamManager(stream_key)
-    for stream_key in stream_keys
+    for stream_key in STREAM_KEYS
 }

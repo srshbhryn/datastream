@@ -19,7 +19,8 @@ class StreamHandler(tornado.websocket.WebSocketHandler):
             stream_manager.remove_websocket_handler(self)
 
     def on_close(self):
-        pass
+        for stream_manager in stream_managers.values():
+            stream_manager.remove_websocket_handler(self)
 
 
 if __name__ == "__main__":

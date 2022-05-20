@@ -17,7 +17,7 @@ class StreamManager:
         self.websocket_handlers.add(wsh)
 
     def remove_websocket_handler(self, wsh):
-        self.websocket_handlers.remove(wsh)
+        self.websocket_handlers.discard(wsh)
 
     def message_handler(self, message):
         for wsh in self.websocket_handlers:

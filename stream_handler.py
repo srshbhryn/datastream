@@ -1,9 +1,11 @@
+import asyncio
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
 import tornado.gen
+import redis.asyncio as redis
 
-from config import REDIS_HOST, REDIS_PORT, STREAM_KEYS
+from config import REDIS_HOST, REDIS_PORT, REDIS_DB, STREAM_KEYS
 
 
 class StreamManager:
@@ -42,3 +44,30 @@ stream_managers = {
     stream_key: StreamManager(stream_key)
     for stream_key in STREAM_KEYS
 }
+
+class Redis:
+    def __init__(self) -> None:
+        self.host = REDIS_HOST
+        self.port = REDIS_PORT
+        self.db = REDIS_DB
+        self.stream_keys = STREAM_KEYS
+        self.ioloop = tornado.ioloop.IOLoop.current()
+
+    async def start(self):
+        try:
+            self.client = redis.Redis(host=self.host, port=self.port, db=self.db)
+        except Exception as e:
+            asyncio.sleep(1)
+            self.ioloop.add_callback(self.start)
+            return
+        self.ioloop.add_callback(self.watch_streams)
+
+    async def watch_streams(self):
+        try:
+            response = await self.client.brpop(self.stream_keys)
+            stream_key, stream_data = response
+            stream_key = stream_key.decode('utf-8')
+            stream_managers[stream_key].message_handler(stream_data)
+            self.ioloop.add_callback(self.watch_streams)
+        except Exception as e:
+            self.ioloop.add_callback(self.start)

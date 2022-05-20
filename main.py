@@ -2,7 +2,7 @@ import tornado.ioloop
 import tornado.web
 import tornado.websocket
 
-from stream_handler import stream_managers, get_stream_manager
+from stream_handler import stream_managers, get_stream_manager, Redis
 
 class StreamHandler(tornado.websocket.WebSocketHandler):
     def check_origin(self, origin):
@@ -28,4 +28,6 @@ if __name__ == "__main__":
         (r"/stream", StreamHandler),
     ])
     application.listen(8888)
-    tornado.ioloop.IOLoop.instance().start()
+    redis_client = Redis()
+    tornado.ioloop.IOLoop.current().add_callback(redis_client.start)
+    tornado.ioloop.IOLoop.current().start()

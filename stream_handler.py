@@ -1,3 +1,4 @@
+import json
 import asyncio
 import tornado.ioloop
 import tornado.web
@@ -20,9 +21,12 @@ class StreamManager:
         self.websocket_handlers.discard(wsh)
 
     def message_handler(self, message):
-        for wsh in self.websocket_handlers:
-            tornado.ioloop.IOLoop.current().add_callback(wsh.write_message, message)
-
+        try:
+            data = json.dumps({'key': self.stream_key, 'msg': json.loads(message.decode('utf-8'))})
+            for wsh in self.websocket_handlers:
+                tornado.ioloop.IOLoop.current().add_callback(wsh.write_message, data)
+        except Exception as e:
+            print(e) #TODO: move to log
 
 def get_stream_manager(subscription_message):
     if ':' not in subscription_message:
@@ -57,7 +61,8 @@ class Redis:
         try:
             self.client = redis.Redis(host=self.host, port=self.port, db=self.db)
         except Exception as e:
-            asyncio.sleep(1)
+            await asyncio.sleep(1)
+            #TODO: log
             self.ioloop.add_callback(self.start)
             return
         self.ioloop.add_callback(self.watch_streams)
@@ -70,4 +75,6 @@ class Redis:
             stream_managers[stream_key].message_handler(stream_data)
             self.ioloop.add_callback(self.watch_streams)
         except Exception as e:
+            #TODO: log
+            #TODO: not all exceptions need restarting client.
             self.ioloop.add_callback(self.start)
